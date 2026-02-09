@@ -3,29 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lịch Việt - Trợ Lý Thông Minh</title>
+    <title>Lịch Việt - Đầy Đủ Ngày Lễ</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#a61d24">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3652/3652191.png">
 
     <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
     <style>
-        :root {
-            --primary-red: #a61d24; 
-            --accent-gold: #d4af37;  
-            --holiday-red: #d32f2f;
-            --bg-body: #f4f4f4;
-        }
+        :root { --primary-red: #a61d24; --accent-gold: #d4af37; --bg: #f4f4f4; --holiday: #d32f2f; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 480px; background: #fff; min-height: 100vh; display: flex; flex-direction: column; }
 
-        body { font-family: -apple-system, sans-serif; background: var(--bg-body); margin: 0; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 480px; background: #fff; min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-
-        /* Header */
         .header { background: var(--primary-red); color: white; padding: 15px; text-align: center; border-bottom: 3px solid var(--accent-gold); position: sticky; top: 0; z-index: 100; }
-        .header h1 { margin: 0 0 10px 0; font-size: 1.3rem; letter-spacing: 2px; color: var(--accent-gold); }
-        .selector-row select { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--accent-gold); font-weight: bold; background: white; }
+        .header h1 { margin: 0 0 10px 0; font-size: 1.2rem; color: var(--accent-gold); letter-spacing: 1px; }
+        .selector-row select { padding: 8px; border-radius: 6px; border: 1px solid var(--accent-gold); font-weight: bold; margin: 0 5px; }
 
         /* Calendar Grid */
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid #eee; }
@@ -33,209 +24,172 @@
         .day { aspect-ratio: 1/1.3; border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; align-items: center; padding-top: 8px; cursor: pointer; position: relative; }
         .solar { font-size: 1.1rem; font-weight: 600; }
         .lunar { font-size: 0.7rem; color: #777; }
+        .is-today { background: #fff5f5; box-shadow: inset 0 0 0 1.5px var(--primary-red); }
         
-        .is-holiday .solar, .is-holiday .lunar, .h-label { color: var(--holiday-red) !important; font-weight: bold; }
-        .h-label { font-size: 0.52rem; text-align: center; margin-top: 2px; line-height: 1; height: 12px; overflow: hidden; }
-        .is-today { background: #fff5f5; box-shadow: inset 0 0 0 1px var(--primary-red); }
-        
-        /* Hiển thị chấm lời nhắc */
+        /* Màu ngày lễ */
+        .is-holiday .solar, .is-holiday .lunar, .h-name { color: var(--holiday) !important; font-weight: bold; }
+        .h-name { font-size: 0.5rem; text-align: center; line-height: 1; height: 10px; margin-top: 2px; overflow: hidden; }
+
         .dot-box { display: flex; gap: 2px; position: absolute; bottom: 4px; }
-        .dot { width: 5px; height: 5px; border-radius: 50%; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
         .dot-blue { background: #2196f3; }
         .dot-pink { background: #e91e63; }
 
-        /* Danh sách lời nhắc */
-        .rem-section { padding: 15px; background: #fff; flex-grow: 1; border-top: 8px solid #eee; }
-        .rem-item { background: #fdfdfd; border-left: 4px solid #ddd; padding: 10px; border-radius: 4px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        /* Section lời nhắc & Tìm kiếm */
+        .rem-section { padding: 15px; background: #fff; border-top: 8px solid #eee; flex-grow: 1; }
+        .search-box { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; font-size: 0.9rem; }
+        .rem-item { background: #fdfdfd; border-left: 5px solid #ddd; padding: 12px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .rem-item.blue { border-left-color: #2196f3; }
         .rem-item.pink { border-left-color: #e91e63; }
-        .rem-date { font-weight: bold; font-size: 0.8rem; color: var(--primary-red); }
+
+        /* Quản lý dữ liệu */
+        .backup-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; background: #f9f9f9; border-top: 1px solid #eee; }
+        .btn-action { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer; background: #fff; }
 
         /* Modal */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 199; backdrop-filter: blur(2px); }
-        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 380px; background: #fff; border-radius: 15px; display: none; z-index: 200; overflow: hidden; }
-        .modal-head { background: var(--primary-red); color: var(--accent-gold); padding: 15px; text-align: center; }
-        .modal-body { padding: 15px; }
-        textarea { width: 100%; height: 80px; margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 1rem; }
-        .btn-save { width: 100%; padding: 12px; background: var(--primary-red); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 199; backdrop-filter: blur(2px); }
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 380px; background: #fff; border-radius: 15px; display: none; z-index: 200; padding: 20px; box-sizing: border-box; }
+        textarea { width: 100%; height: 80px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-sizing: border-box; font-size: 1rem; }
+        .btn-save { width: 100%; padding: 14px; background: var(--primary-red); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <h1>LỊCH VIỆT</h1>
+        <h1>LỊCH VIỆT & LỜI NHẮC</h1>
         <div class="selector-row">
             <select id="selM" onchange="render()"></select>
             <select id="selY" onchange="render()"></select>
         </div>
     </div>
+    
     <div class="grid" id="grid"></div>
+
     <div class="rem-section">
-        <h3 style="font-size: 0.9rem; margin-top: 0;">📅 DANH SÁCH LỜI NHẮC</h3>
+        <input type="text" id="searchIn" class="search-box" placeholder="🔍 Tìm kiếm lời nhắc..." oninput="updateList()">
         <div id="remList"></div>
+    </div>
+
+    <div class="backup-controls">
+        <button class="btn-action" onclick="exportData()">📤 Sao lưu</button>
+        <button class="btn-action" onclick="document.getElementById('fileIn').click()">📥 Khôi phục</button>
+        <input type="file" id="fileIn" style="display:none" onchange="importData(event)">
     </div>
 </div>
 
-<div class="overlay" id="overlay" onclick="closeModal()"></div>
+<div class="overlay" id="overlay" onclick="closeAll()"></div>
+
 <div class="modal" id="modal">
-    <div class="modal-head">
-        <div id="mS" style="font-size: 2.5rem; font-weight: 800;"></div>
-        <div id="mInfo" style="font-size: 0.9rem; line-height: 1.4;"></div>
+    <div id="mInfo" style="font-weight: bold; color: var(--primary-red); margin-bottom: 10px; text-align: center;"></div>
+    <textarea id="noteIn" placeholder="Nội dung nhắc nhở..."></textarea>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.8rem;">
+        <select id="lunarOpt" style="padding: 5px;"><option value="false">Dương lịch</option><option value="true">Âm lịch 🌙</option></select>
+        <select id="typeOpt" style="padding: 5px;"><option value="blue">🔔 Lời nhắc</option><option value="pink">🎂 Kỷ niệm</option></select>
     </div>
-    <div class="modal-body">
-        <label style="font-size: 0.8rem; font-weight: bold;">NỘI DUNG LỜI NHẮC</label>
-        <textarea id="noteIn" placeholder="Ví dụ: Giỗ cụ, Sinh nhật..."></textarea>
-        <div style="font-size: 0.85rem; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div>
-                <label>Loại lịch:</label>
-                <select id="lunarOpt" style="width: 100%; padding: 5px; border-radius: 4px;">
-                    <option value="false">Dương lịch</option>
-                    <option value="true">Âm lịch 🌙</option>
-                </select>
-            </div>
-            <div>
-                <label>Loại nhắc:</label>
-                <select id="typeOpt" style="width: 100%; padding: 5px; border-radius: 4px;">
-                    <option value="blue">🔔 Lời nhắc</option>
-                    <option value="pink">🎂 Kỷ niệm</option>
-                </select>
-            </div>
-        </div>
-        <div style="margin-top: 10px;">
-            <label style="display: flex; align-items: center; gap: 5px;">
-                <input type="checkbox" id="repOpt"> Nhắc lại hàng năm
-            </label>
-        </div>
-        <button class="btn-save" style="margin-top:15px;" onclick="save()">LƯU LỜI NHẮC</button>
-    </div>
+    <div style="margin-top: 10px; font-size: 0.85rem;"><label><input type="checkbox" id="repOpt"> Nhắc lại hàng năm</label></div>
+    <button class="btn-save" style="margin-top: 15px;" onclick="save()">LƯU LỜI NHẮC</button>
 </div>
 
 <script>
-    // Dịch Can Chi
-    const CAN = { '甲':'Giáp','乙':'Ất','丙':'Bính','丁':'Đinh','戊':'Mậu','己':'Kỷ','庚':'Canh','辛':'Tân','壬':'Nhâm','癸':'Quý' };
-    const CHI = { '子':'Tý','丑':'Sửu','寅':'Dần','卯':'Mão','辰':'Thìn','巳':'Tỵ','午':'Ngọ','未':'Mùi','申':'Thân','酉':'Dậu','戌':'Tuất','亥':'Hợi' };
-    function vn(t) { 
-        return t ? t.split('').map(c => (CAN[c] || CHI[c] || c) + " ").join('').trim() : ""; 
-    }
-
     const selM = document.getElementById('selM'), selY = document.getElementById('selY'), grid = document.getElementById('grid'), remList = document.getElementById('remList');
     let activeDate = null;
 
-    // Khởi tạo tháng năm
+    // Danh sách ngày lễ
+    const holidays = {
+        solar: { '1-1': 'Tết Tây', '14-2': 'Valentine', '8-3': 'Phụ nữ QT', '30-4': 'Giải Phóng', '1-5': 'Quốc tế LĐ', '19-5': 'Sinh nhật Bác', '1-6': 'Thiếu nhi', '27-7': 'Thương binh LS', '2-9': 'Quốc Khánh', '20-10': 'Phụ nữ VN', '20-11': 'Nhà giáo VN', '22-12': 'QĐND VN', '25-12': 'Noel' },
+        lunar: { '1-1': 'Tết Nguyên Đán', '2-1': 'Tết Nguyên Đán', '3-1': 'Tết Nguyên Đán', '15-1': 'Rằm Tháng Giêng', '3-3': 'Tết Hàn Thực', '10-3': 'Giỗ Tổ Hùng Vương', '15-4': 'Lễ Phật Đản', '5-5': 'Tết Đoan Ngọ', '15-7': 'Vu Lan', '15-8': 'Trung Thu', '23-12': 'Táo Quân', '30-12': 'Giao Thừa' }
+    };
+
     for(let i=1; i<=12; i++) selM.innerHTML += `<option value="${i}">Tháng ${i}</option>`;
     for(let i=1900; i<=2100; i++) selY.innerHTML += `<option value="${i}">Năm ${i}</option>`;
     const now = new Date(); selM.value = now.getMonth()+1; selY.value = now.getFullYear();
-
-    function getHolidays(d, m, ld, lm) {
-        if(d===1 && m===1) return "Tết Tây";
-        if(d===30 && m===4) return "Giải Phóng";
-        if(d===1 && m===5) return "Quốc Tế LĐ";
-        if(d===2 && m===9) return "Quốc Khánh";
-        if(lm===1 && ld===1) return "Tết Ta";
-        if(lm===3 && ld===10) return "Giỗ Tổ";
-        if(lm===8 && ld===15) return "Trung Thu";
-        if(lm===12 && ld>=29) return "Giao Thừa";
-        return "";
-    }
 
     function render() {
         const m = +selM.value, y = +selY.value;
         grid.innerHTML = ['T2','T3','T4','T5','T6','T7','CN'].map(t => `<div class="weekday">${t}</div>`).join('');
         const first = new Date(y, m-1, 1), last = new Date(y, m, 0);
         let offset = first.getDay() === 0 ? 6 : first.getDay() - 1;
-        
         for(let i=0; i<offset; i++) grid.innerHTML += `<div class="day" style="opacity:0"></div>`;
 
-        const db = JSON.parse(localStorage.getItem('lv_v3') || '{}');
+        const db = JSON.parse(localStorage.getItem('lv_db') || '{}');
 
         for(let d=1; d<=last.getDate(); d++) {
             const date = new Date(y, m-1, d);
             const l = Lunar.fromDate(date);
             const ld = l.getDay(), lm = l.getMonth();
-            const dKey = `D-${y}-${m}-${d}`, rKey = `DR-${m}-${d}`, aKey = `L-${lm}-${ld}`, arKey = `LR-${lm}-${ld}`;
+            const solarKey = `${d}-${m}`, lunarKey = `${ld}-${lm}`;
+            const holidayName = holidays.solar[solarKey] || holidays.lunar[lunarKey] || "";
             
-            const holiday = getHolidays(d, m, ld, lm);
+            const dKey = `D-${y}-${m}-${d}`, rKey = `DR-${m}-${d}`, aKey = `L-${lm}-${ld}`, arKey = `LR-${lm}-${ld}`;
             const event = db[dKey] || db[rKey] || db[aKey] || db[arKey];
-            const isSun = date.getDay() === 0;
 
             grid.innerHTML += `
-                <div class="day ${isSun || holiday ? 'is-holiday':''} ${now.toDateString()===date.toDateString()?'is-today':''}" onclick="openModal(${y},${m},${d})">
+                <div class="day ${date.getDay()===0 || holidayName ?'is-holiday':''} ${now.toDateString()===date.toDateString()?'is-today':''}" onclick="openModal(${y},${m},${d})">
                     <div class="solar">${d}</div>
                     <div class="lunar">${ld===1?ld+'/'+lm:ld}</div>
-                    <div class="h-label">${holiday}</div>
-                    <div class="dot-box">${event?`<div class="dot dot-${event.type}"></div>`:''}</div>
+                    <div class="h-name">${holidayName}</div>
+                    <div class="dot-box">${event ? `<div class="dot dot-${event.type}"></div>`:''}</div>
                 </div>`;
         }
         updateList();
     }
 
     function openModal(y, m, d) {
-        const date = new Date(y, m-1, d);
-        const l = Lunar.fromDate(date);
+        const l = Lunar.fromDate(new Date(y, m-1, d));
         activeDate = { y, m, d, lm: l.getMonth(), ld: l.getDay() };
-        
-        document.getElementById('mS').innerText = d;
-        document.getElementById('mInfo').innerHTML = `
-            Âm lịch: ${l.getDay()}/${l.getMonth()} - Năm ${vn(l.getYearInGanZhi())}<br>
-            Ngày ${vn(l.getDayInGanZhi())} - Tháng ${vn(l.getMonthInGanZhi())}
-        `;
+        document.getElementById('mInfo').innerText = `Ngày ${d}/${m}/${y} (${l.getDay()}/${l.getMonth()} Âm)`;
         document.getElementById('noteIn').value = "";
         document.getElementById('overlay').style.display = 'block';
         document.getElementById('modal').style.display = 'block';
     }
 
-    function closeModal() { 
-        document.getElementById('overlay').style.display = 'none'; 
-        document.getElementById('modal').style.display = 'none'; 
-    }
-
     function save() {
         const text = document.getElementById('noteIn').value.trim();
-        if(!text) { alert("Vui lòng nhập nội dung!"); return; }
-
-        const db = JSON.parse(localStorage.getItem('lv_v3') || '{}');
-        const isLunar = document.getElementById('lunarOpt').value === 'true';
-        const isRep = document.getElementById('repOpt').checked;
-        let key = "";
-
-        if(!isLunar) key = isRep ? `DR-${activeDate.m}-${activeDate.d}` : `D-${activeDate.y}-${activeDate.m}-${activeDate.d}`;
-        else key = isRep ? `LR-${activeDate.lm}-${activeDate.ld}` : `L-${activeDate.lm}-${activeDate.ld}`;
-
-        db[key] = { text: text, type: document.getElementById('typeOpt').value };
-        localStorage.setItem('lv_v3', JSON.stringify(db));
-        closeModal(); 
-        render();
+        if(!text) return;
+        const db = JSON.parse(localStorage.getItem('lv_db') || '{}');
+        const isL = document.getElementById('lunarOpt').value === 'true';
+        const isR = document.getElementById('repOpt').checked;
+        const key = isL ? (isR ? `LR-${activeDate.lm}-${activeDate.ld}` : `L-${activeDate.lm}-${activeDate.ld}`) 
+                        : (isR ? `DR-${activeDate.m}-${activeDate.d}` : `D-${activeDate.y}-${activeDate.m}-${activeDate.d}`);
+        db[key] = { text, type: document.getElementById('typeOpt').value };
+        localStorage.setItem('lv_db', JSON.stringify(db));
+        closeAll(); render();
     }
 
     function updateList() {
-        const db = JSON.parse(localStorage.getItem('lv_v3') || '{}');
-        const keys = Object.keys(db);
-        remList.innerHTML = keys.length ? "" : "<p style='font-size:0.8rem;color:#999;text-align:center;'>Chưa có lời nhắc nào.</p>";
+        const db = JSON.parse(localStorage.getItem('lv_db') || '{}');
+        const searchTerm = document.getElementById('searchIn').value.toLowerCase();
+        const keys = Object.keys(db).filter(k => db[k].text.toLowerCase().includes(searchTerm));
         
+        remList.innerHTML = keys.length ? "" : "<p style='text-align:center;color:#999;font-size:0.8rem;'>Không tìm thấy lời nhắc.</p>";
         keys.forEach(k => {
             const ev = db[k];
-            let dateStr = "";
-            if(k.includes('LR')) dateStr = `Âm hàng năm (${k.split('-')[2]}/${k.split('-')[1]})`;
-            else if(k.includes('L-')) dateStr = `Âm lịch (${k.split('-')[2]}/${k.split('-')[1]})`;
-            else if(k.includes('DR')) dateStr = `Dương hàng năm (${k.split('-')[2]}/${k.split('-')[1]})`;
-            else dateStr = `Ngày ${k.split('-')[3]}/${k.split('-')[2]}/${k.split('-')[1]}`;
-
-            remList.innerHTML += `
-                <div class="rem-item ${ev.type}">
-                    <div><span class="rem-date">${dateStr}</span><br><span style="font-size:0.95rem">${ev.text}</span></div>
-                    <button onclick="del('${k}')" style="border:none;background:none;color:red;font-size:1.2rem;font-weight:bold;padding:5px;">×</button>
-                </div>`;
+            remList.innerHTML += `<div class="rem-item ${ev.type}"><div><div style="font-size:0.7rem;font-weight:bold;color:#a61d24;">SỰ KIỆN</div><div style="font-size:0.9rem;">${ev.text}</div></div><button onclick="del('${k}')" style="border:none;background:none;color:red;font-size:1.2rem;cursor:pointer;">&times;</button></div>`;
         });
     }
 
-    function del(k) {
-        if(confirm("Xóa lời nhắc này?")) {
-            const db = JSON.parse(localStorage.getItem('lv_v3') || '{}');
-            delete db[k];
-            localStorage.setItem('lv_v3', JSON.stringify(db));
+    function del(k) { if(confirm("Xóa lời nhắc?")){ const db=JSON.parse(localStorage.getItem('lv_db')||'{}'); delete db[k]; localStorage.setItem('lv_db',JSON.stringify(db)); render(); } }
+    function closeAll() { document.querySelectorAll('.modal, .overlay').forEach(el => el.style.display = 'none'); }
+
+    function exportData() {
+        const data = localStorage.getItem('lv_db');
+        if(!data) return alert("Trống!");
+        const blob = new Blob([data], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `lichviet_backup.json`;
+        a.click();
+    }
+
+    function importData(e) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            localStorage.setItem('lv_db', ev.target.result);
             render();
-        }
+            alert("Đã khôi phục!");
+        };
+        reader.readAsText(e.target.files[0]);
     }
 
     render();
